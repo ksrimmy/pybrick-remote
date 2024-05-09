@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <style>
+    .ele1 {
+      background-color: #c1ecf7;
+      box-shadow: none;
+    }
+
+    .ele2 {
+      font-size: 20px;
+      background-color: #f00c0c;
+      box-shadow: none;
+      box-shadow: 5px 5px #888888;
+    }
+
+    .red-button {
+      background-color: #f00c0c;
+    }
+
+    .blue-button {
+      background-color: #5c5cff;
+    }
+
+    td {
+      font-size: 70px;
+      background-color: black;
+      text-align: center;
+      color: white;
+      border-radius: 25%;
+      box-shadow: 5px 5px #888888;
+    }
+
+    td:active {
+      transform: translate(5px, 5px);
+      box-shadow: none;
+    }
+
+    .noselect {
+      -webkit-touch-callout: none;
+      /* iOS Safari */
+      -webkit-user-select: none;
+      /* Safari */
+      -khtml-user-select: none;
+      /* Konqueror HTML */
+      -moz-user-select: none;
+      /* Firefox */
+      -ms-user-select: none;
+      /* Internet Explorer/Edge */
+      user-select: none;
+      /* Non-prefixed version, currently
+                                      supported by Chrome and Opera */
+    }
+  </style>
+</head>
+
+<body class="noselect" align="center" style="background-color:#c1ecf7">
+  <h1 style="color:black;text-align:center;">CAR CONTROLLER</h1>
+  <!-- <h2 id="sportele" style="color:#f00c0c; text-align:center;">SPORT OFF</h2><br> -->
+  <table id="mainTable" style="width:400px;margin:auto;table-layout:fixed" CELLSPACING=10>
+    <tr>
+      <td ontouchstart='onTouchStart("fwd|lft",this)' ontouchend='onTouchEnd("",this)'>&#8598;</td>
+      <td ontouchstart='onTouchStart("fwd",this)' ontouchend='onTouchEnd("",this)'>&#8593;</td>
+      <td ontouchstart='onTouchStart("fwd|rgt",this)' ontouchend='onTouchEnd("",this)'>&#8599;</td>
+    </tr>
+    <tr>
+      <td class="ele1"></td>
+      <td class="ele2" ontouchstart='connect(this)'>CONNECT</td>
+      <td class="ele1"></td>
+    </tr>
+    <tr>
+      <td ontouchstart='onTouchStartAndEnd("3",this)' ontouchend='onTouchStartAndEnd("4",this)'>&#8601;</td>
+      <td ontouchstart='onTouchStartAndEnd("1",this)' ontouchend='onTouchStartAndEnd("2",this)'>&#8595;</td>
+      <td ontouchstart='onTouchStartAndEnd("5",this)' ontouchend='onTouchStartAndEnd("6",this)'>&#8600;</td </tr>
+  </table>
+  <script src="script.js"></script>
+</body>
+
+</html>
