@@ -129,19 +129,37 @@ async function predictWebcam() {
 
       if (result.worldLandmarks.length > 0) {
         let rw = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_WRIST];
-        let v_rw = [rw.y, rw.z];
+        let v_rw = [rw.x, rw.y, rw.z];
+        let re = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_ELBOW];
+        let v_re = [re.x, re.y, re.z];
+        let v_wrist_elbow = subtactVector(v_rw, v_re);
+        v_wrist_elbow = mulVector(v_wrist_elbow, -1)
         let rs = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_SHOULDER];
-        let v_rs = [rs.y, rs.z];
+        let v_rs = [rs.x, rs.y, rs.z];
         let v_wrist_shoulder = subtactVector(v_rw, v_rs);
-
 
         // let ra = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_ANKLE];
         // let v_ra = [ra.x, ra.z];
         // let v_ankle_shoulder = subtactVector(v_ra, v_rs);
 
 
-        let angleBet = angleBetween([0., -1.], v_wrist_shoulder);
-        console.log(angleBet);
+        let angleMove = Math.atan2(v_wrist_elbow[2], v_wrist_elbow[1]) * 180 / Math.PI;
+        let angleDir = Math.atan2(v_wrist_elbow[0], v_wrist_elbow[2]) * 180 / Math.PI;
+        // let angleSim = cosinesim([0, 0., 1.], v_wrist_elbow);
+        // var angleDeg = Math.acos(angleSim) * 180 / Math.PI;
+
+
+        let move = "REV";
+        if (angleMove < 90 && angleMove > 0) {
+          move = "FWD";
+        }
+        if (angleDir > 0) {
+          console.log(move, 90 - angleMove, "RGT: ", angleDir);
+        } else {
+          console.log(move, angleMove - 90, "LFT: ", Math.abs(angleDir));
+        }
+
+        // console.log("Move:", angleMove, "DIR: ", angleDir);
 
       }
 
@@ -156,17 +174,43 @@ async function predictWebcam() {
 
 function angleBetween(p1, p2) {
   // angle in radians
-  var angleRadians = Math.atan2(p2[1] - p1[1], p2[0] - p1[0]);
+  // var angleRadians = Math.atan2(p2[1] - p1[1], p2[0] - p1[0]);
 
   // angle in degrees
   var angleDeg = Math.atan2(p2[1] - p1[1], p2[0] - p1[0]) * 180 / Math.PI;
+
   return angleDeg
+}
+
+function cosinesim(A, B) {
+  var dotproduct = 0;
+  var mA = 0;
+  var mB = 0;
+
+  for (var i = 0; i < A.length; i++) {
+    dotproduct += A[i] * B[i];
+    mA += A[i] * A[i];
+    mB += B[i] * B[i];
+  }
+
+  mA = Math.sqrt(mA);
+  mB = Math.sqrt(mB);
+  var similarity = dotproduct / (mA * mB);
+
+  return similarity;
 }
 
 function addVector(a, b) {
   return a.map((e, i) => e + b[i]);
 }
 
+function mulVector(a, b) {
+  return a.map((e, i) => e * b);
+}
 function subtactVector(a, b) {
   return a.map((e, i) => e - b[i]);
+}
+
+async function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
