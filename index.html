@@ -64,19 +64,26 @@
   <!-- <h2 id="sportele" style="color:#f00c0c; text-align:center;">SPORT OFF</h2><br> -->
   <table id="mainTable" style="width:400px;margin:auto;table-layout:fixed" CELLSPACING=10>
     <tr>
-      <td ontouchstart='onTouchStart("fwd|lft",this)' ontouchend='onTouchEnd("",this)'>&#8598;</td>
-      <td ontouchstart='onTouchStart("fwd",this)' ontouchend='onTouchEnd("",this)'>&#8593;</td>
-      <td ontouchstart='onTouchStart("fwd|rgt",this)' ontouchend='onTouchEnd("",this)'>&#8599;</td>
+      <td ontouchstart='onTouchStart("fwd|lft",this)' onmousedown='onTouchStart("fwd|lft",this)'
+        ontouchend='onTouchEnd("",this)' onmouseup='onTouchEnd("",this)'>&#8598;</td>
+      <td ontouchstart='onTouchStart("fwd",this)' onmousedown='onTouchStart("fwd",this)'
+        ontouchend='onTouchEnd("",this)' onmouseup='onTouchEnd("",this)'>&#8593;</td>
+      <td ontouchstart='onTouchStart("fwd|rgt",this)' onmousedown='onTouchStart("fwd|rgt",this)'
+        ontouchend='onTouchEnd("",this)' onmouseup='onTouchEnd("",this)'>&#8599;</td>
     </tr>
     <tr>
       <td class="ele1"></td>
-      <td class="ele2" ontouchstart='connect(this)'>CONNECT</td>
+      <td class="ele2" ontouchstart='connect(this)' onclick="connect(this)">CONNECT</td>
       <td class="ele1"></td>
     </tr>
     <tr>
-      <td ontouchstart='onTouchStartAndEnd("3",this)' ontouchend='onTouchStartAndEnd("4",this)'>&#8601;</td>
-      <td ontouchstart='onTouchStartAndEnd("1",this)' ontouchend='onTouchStartAndEnd("2",this)'>&#8595;</td>
-      <td ontouchstart='onTouchStartAndEnd("5",this)' ontouchend='onTouchStartAndEnd("6",this)'>&#8600;</td </tr>
+      <td ontouchstart='onTouchStart("rev|lft",this)' onmousedown='onTouchStart("rev|lft",this)'
+        ontouchend='onTouchEnd("",this)' onmouseup='onTouchEnd("",this)'>&#8601;</td>
+      <td ontouchstart='onTouchStart("rev",this)' onmousedown='onTouchStart("rev",this)'
+        ontouchend='onTouchEnd("",this)' onmouseup='onTouchEnd("",this)'>&#8595;</td>
+      <td ontouchstart='onTouchStart("rev|rgt",this)' onmousedown='onTouchStart("rev|rgt",this)'
+        ontouchend='onTouchEnd("",this)' onmouseup='onTouchEnd("",this)'>&#8600;</td>
+    </tr>
   </table>
   <script src="script.js"></script>
   <script type="module" src="mediapipe.js"></script>
