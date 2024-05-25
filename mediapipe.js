@@ -136,7 +136,7 @@ async function predictWebcam() {
         v_wrist_elbow = mulVector(v_wrist_elbow, -1)
         let rs = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_SHOULDER];
         let v_rs = [rs.x, rs.y, rs.z];
-        let v_wrist_shoulder = subtactVector(v_rw, v_rs);
+        // let v_wrist_shoulder = subtactVector(v_rw, v_rs);
 
         // let ra = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_ANKLE];
         // let v_ra = [ra.x, ra.z];
@@ -149,18 +149,33 @@ async function predictWebcam() {
         // var angleDeg = Math.acos(angleSim) * 180 / Math.PI;
 
 
-        let move = "REV";
-        if (angleMove < 90 && angleMove > 0) {
-          move = "FWD";
+        let move = "rev";
+        // if (angleMove < 90 && angleMove > 0) {
+        if (angleMove < 90) {
+          move = "fwd";
         }
-        if (angleDir > 0) {
-          console.log(move, 90 - angleMove, "RGT: ", angleDir);
+        if (angleMove > 70 && angleMove < 130) {
+          cur_cmd = "";
         } else {
-          console.log(move, angleMove - 90, "LFT: ", Math.abs(angleDir));
+          if (angleDir > 40) {
+            console.log(move, 90 - angleMove, "RGT: ", angleDir);
+            if (move == "fwd") {
+              cur_cmd = move + "|rgt";
+            } else {
+              cur_cmd = move + "|lft";
+            }
+          } else if (angleDir < -40) {
+            console.log(move, angleMove - 90, "LFT: ", Math.abs(angleDir));
+            if (move == "fwd") {
+              cur_cmd = move + "|lft";
+            } else {
+              cur_cmd = move + "|rgt";
+            }
+          } else {
+            cur_cmd = move;
+          }
         }
-
         // console.log("Move:", angleMove, "DIR: ", angleDir);
-
       }
 
 
