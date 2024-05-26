@@ -103,6 +103,15 @@ function enableCam(event) {
   });
 }
 let lastVideoTime = -1;
+let dir = [];
+let steering = [];
+const BUFFER_SIZE = 3;
+const FWD = 1;
+const NONE = 0;
+const REV = -1;
+const LFT = -1;
+const RGT = 1;
+
 async function predictWebcam() {
   canvasElement.style.height = videoHeight;
   video.style.height = videoHeight;
@@ -136,11 +145,6 @@ async function predictWebcam() {
         v_wrist_elbow = mulVector(v_wrist_elbow, -1)
         let rs = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_SHOULDER];
         let v_rs = [rs.x, rs.y, rs.z];
-        // let v_wrist_shoulder = subtactVector(v_rw, v_rs);
-
-        // let ra = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_ANKLE];
-        // let v_ra = [ra.x, ra.z];
-        // let v_ankle_shoulder = subtactVector(v_ra, v_rs);
 
 
         let angleMove = Math.atan2(v_wrist_elbow[2], v_wrist_elbow[1]) * 180 / Math.PI;
@@ -149,36 +153,55 @@ async function predictWebcam() {
         // var angleDeg = Math.acos(angleSim) * 180 / Math.PI;
 
 
-        let move = "rev";
-        // if (angleMove < 90 && angleMove > 0) {
+
+
+        let cur_dir = REV;
         if (angleMove < 90) {
-          move = "fwd";
+          cur_dir = FWD;
         }
-        if (angleMove > 70 && angleMove < 130) {
-          cur_cmd = "";
-        } else {
-          if (angleDir > 40) {
-            console.log(move, 90 - angleMove, "RGT: ", angleDir);
-            if (move == "fwd") {
-              cur_cmd = move + "|rgt";
-            } else {
-              cur_cmd = move + "|lft";
-            }
-          } else if (angleDir < -40) {
-            console.log(move, angleMove - 90, "LFT: ", Math.abs(angleDir));
-            if (move == "fwd") {
-              cur_cmd = move + "|lft";
-            } else {
-              cur_cmd = move + "|rgt";
-            }
+
+        if (angleDir > 40) {
+          if (cur_dir == FWD) {
+            appendCmd(cur_dir, RGT);
           } else {
-            cur_cmd = move;
+            appendCmd(cur_dir, LFT);
+          }
+        } else if (angleDir < -40) {
+          if (cur_dir == FWD) {
+            appendCmd(cur_dir, LFT);
+          } else {
+            appendCmd(cur_dir, RGT);
+          }
+        } else {
+          appendCmd(cur_dir, NONE);
+        }
+        let cmd_dir = "";
+        let cmd_steer = "";
+        let sum_dir = dir.reduce((partialSum, a) => partialSum + a, 0)
+        if (sum_dir > 0) {
+          cmd_dir = "fwd";
+        } else if (sum_dir < 0) {
+          cmd_dir = "rev";
+        }
+        let sum_steer = steering.reduce((partialSum, a) => partialSum + a, 0)
+        if (sum_steer > 0) {
+          cmd_steer = "rgt";
+        } else if (sum_steer < 0) {
+          cmd_steer = "lft";
+        }
+
+        if (cmd_dir.length > 0) {
+          cur_cmd = cmd_dir;
+          if (cmd_steer.length > 0) {
+            cur_cmd += "|" + cmd_steer;
           }
         }
-        // console.log("Move:", angleMove, "DIR: ", angleDir);
+
+        console.log(cur_cmd);
+
+        // }
+        console.log("Move:", angleMove, "DIR: ", angleDir);
       }
-
-
     });
   }
   // Call this function again to keep predicting when the browser is ready.
@@ -186,6 +209,16 @@ async function predictWebcam() {
     window.requestAnimationFrame(predictWebcam);
   }
 }
+
+function appendCmd(cur_dir, cur_steer) {
+  if (dir.length == BUFFER_SIZE) {
+    dir.shift();
+    steering.shift();
+  }
+  dir.push(cur_dir);
+  steering.push(cur_steer);
+}
+
 
 function angleBetween(p1, p2) {
   // angle in radians
@@ -228,4 +261,28 @@ function subtactVector(a, b) {
 
 async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function handleVideo(cameraFacing) {
+  const constraints = {
+    video: {
+      facingMode: {
+        exact: cameraFacing
+      }
+    }
+  }
+  return constraints
+};
+
+function turnVideo(constraints) {
+  let video;
+  navigator.mediaDevices.getUserMedia(constraints)
+    .then((stream) => {
+      video = document.createElement("video")
+      video.srcObject = stream
+      video.play()
+      video.onloadeddata = () => {
+        ctx.height = video.videoHeight
+      }
+    })
 }
