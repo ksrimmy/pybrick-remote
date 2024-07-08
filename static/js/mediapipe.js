@@ -41,8 +41,8 @@ let poseLandmarker = undefined;
 let runningMode = "IMAGE";
 let enableWebcamButton;
 let webcamRunning = false;
-const videoHeight = "270px";
-const videoWidth = "360px";
+const videoHeight = "360px";
+const videoWidth = "270px";
 // Before we can use PoseLandmarker class we must wait for it to finish
 // loading. Machine Learning models can be large and take a moment to
 // get everything needed to run.
@@ -102,8 +102,8 @@ function enableCam(event) {
     // getUsermedia parameters.
     const constraints = {
         video: true,
-        width: 360,
-        height: 270,
+        width: 270,
+        height: 360,
     };
   
     // Activate the webcam stream.
