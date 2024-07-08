@@ -41,6 +41,7 @@ let poseLandmarker = undefined;
 let runningMode = "IMAGE";
 let enableWebcamButton;
 let webcamRunning = false;
+let video_constraints = true;
 const videoHeight = "480px";
 const videoWidth = "360px";
 // Before we can use PoseLandmarker class we must wait for it to finish
@@ -79,41 +80,66 @@ else {
   console.warn("getUserMedia() is not supported by your browser");
 }
 // Enable the live webcam view and start detection.
-function enableCam(event) {
+function enableCam(enable) {
   if (!poseLandmarker) {
     console.log("Wait! poseLandmaker not loaded yet.");
     return;
   }
-  if (webcamRunning === true) {
-    if (video.srcObject !== null) {
-      const tracks = video.srcObject.getTracks();
-      if (tracks.length > 0) {
-        tracks[0].stop();  
-      }  
-      webcamRunning = false;
+  if (webcamRunning !== enable) {
+    if (webcamRunning === true) {
+      if (video.srcObject !== null) {
+        const tracks = video.srcObject.getTracks();
+        if (tracks.length > 0) {
+          tracks[0].stop();  
+        }  
+        webcamRunning = false;
 
-      video.removeEventListener("loadeddata", predictWebcam)
-      enableWebcamButton.innerText = "Enable cam";
+        video.removeEventListener("loadeddata", predictWebcam)
+        enableWebcamButton.innerText = "Enable cam";
+        
+      }
+    } else {
+      webcamRunning = true;
+      enableWebcamButton.innerText = "Disable Cam";
       
     }
-  } else {
-    webcamRunning = true;
-    enableWebcamButton.innerText = "Disable Cam";
     // getUsermedia parameters.
     const constraints = {
-        video: true,
-        width: 360,
-        height: 480,
+      video: video_constraints,
+      width: 360,
+      height: 480,
     };
-  
-    // Activate the webcam stream.
-    navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
-      video.srcObject = stream;
-      video.addEventListener("loadeddata", predictWebcam);
-    });
+    
 
+    // try {
+      // Activate the webcam stream.
+      navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+        video.srcObject = stream;
+        video.addEventListener("loadeddata", predictWebcam);
+      });
+    // } catch (OverconstrainedError) {
+    //   constraints.video = true;
+    //   a = navigator.mediaDevices.getUserMedia(constraints);
+    // }
+    
   }
 }
+
+
+function switchCam() {
+  if (video_constraints) {
+    video_constraints = {
+      facingMode: {
+        exact: cameraFacing
+      }
+    };
+  } else {
+    video_constraints = true;
+  }
+  enableCam(true);
+}
+
+
 let lastVideoTime = -1;
 let dir = [];
 let steering = [];
@@ -271,30 +297,3 @@ function subtactVector(a, b) {
   return a.map((e, i) => e - b[i]);
 }
 
-async function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function handleVideo(cameraFacing) {
-  const constraints = {
-    video: {
-      facingMode: {
-        exact: cameraFacing
-      }
-    }
-  }
-  return constraints
-};
-
-function turnVideo(constraints) {
-  let video;
-  navigator.mediaDevices.getUserMedia(constraints)
-    .then((stream) => {
-      video = document.createElement("video")
-      video.srcObject = stream
-      video.play()
-      video.onloadeddata = () => {
-        ctx.height = video.videoHeight
-      }
-    })
-}
