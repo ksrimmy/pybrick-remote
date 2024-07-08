@@ -179,16 +179,16 @@ async function predictWebcam() {
         // * x towards left hip
         // * y towards ground
         // * z towards back
-        let nose = result.worldLandmarks[0][POSE_LANDMARKS.NOSE];
+        // let nose = result.worldLandmarks[0][POSE_LANDMARKS.NOSE];
         let rw = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_WRIST];
+        let re = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_ELBOW];
         let lw = result.worldLandmarks[0][POSE_LANDMARKS.LEFT_WRIST];
         
-        if (rw.y < nose.y) {
+        if (rw.y < re.y) {
           // Right hand is up
           cur_dir = FWD;
 
           let v_rw = [rw.x, rw.y, rw.z];
-          let re = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_ELBOW];
           let v_re = [re.x, re.y, re.z];
           let v_wrist_elbow = subtactVector(v_rw, v_re);
           v_wrist_elbow = mulVector(v_wrist_elbow, -1)
@@ -204,7 +204,7 @@ async function predictWebcam() {
           } else {
             appendCmd(cur_dir, NONE);
           }
-        } else if (lw.y < nose.y) {
+        } else if (lw.y < re.y) {
           // Left hand is up
           cur_dir = REV;
 
