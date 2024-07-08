@@ -62,9 +62,9 @@ const createPoseLandmarker = async () => {
 createPoseLandmarker();
 
 
-switchCamButton = document.getElementById("switchCamButton");
-switchCamButton.addEventListener("click", switchCam);
 
+// let switchCamButton = document.getElementById("switchCamButton");
+// switchCamButton.addEventListener("click", switchCam);
 
 /********************************************************************
 // Demo 2: Continuously grab image from webcam stream and detect it.
@@ -91,19 +91,19 @@ function enableCam(enable) {
     return;
   }
   if (webcamRunning !== enable) {
+    video.removeEventListener("loadeddata", predictWebcam);
     if (webcamRunning === true) {
+      // stop webcam
       if (video.srcObject !== null) {
         const tracks = video.srcObject.getTracks();
         if (tracks.length > 0) {
           tracks[0].stop();  
         }  
         webcamRunning = false;
-
-        video.removeEventListener("loadeddata", predictWebcam)
         enableWebcamButton.innerText = "Enable cam";
-        
       }
     } else {
+      // run webcam
       webcamRunning = true;
       enableWebcamButton.innerText = "Disable Cam";
       
@@ -116,30 +116,20 @@ function enableCam(enable) {
     };
     
 
-    // try {
-      // Activate the webcam stream.
-      navigator.mediaDevices.getUserMedia(constraints).then((stream) => {{
-        facingMode: {
-          exact: cameraFacing
-        }
-      },
-        video.srcObject = stream;
-        video.addEventListener("loadeddata", predictWebcam);
-      });
-    // } catch (OverconstrainedError) {
-    //   constraints.video = true;
-    //   a = navigator.mediaDevices.getUserMedia(constraints);
-    // }
-    
+    // Activate the webcam stream.
+    navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+      video.srcObject = stream;
+      video.addEventListener("loadeddata", predictWebcam);
+    });  
   }
 }
 
 
 function switchCam() {
-  if (video_constraints) {
+  if (video_constraints === true) {
     video_constraints = {
       facingMode: {
-        exact: cameraFacing
+        exact: "environment"
       }
     };
   } else {
@@ -183,71 +173,94 @@ async function predictWebcam() {
       }
       canvasCtx.restore();
 
+      let cur_dir = NONE;
       if (result.worldLandmarks.length > 0) {
+        // mediapipe coordinate system:
+        // * x towards left hip
+        // * y towards ground
+        // * z towards back
+        let nose = result.worldLandmarks[0][POSE_LANDMARKS.NOSE];
         let rw = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_WRIST];
-        let v_rw = [rw.x, rw.y, rw.z];
-        let re = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_ELBOW];
-        let v_re = [re.x, re.y, re.z];
-        let v_wrist_elbow = subtactVector(v_rw, v_re);
-        v_wrist_elbow = mulVector(v_wrist_elbow, -1)
-        let rs = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_SHOULDER];
-        let v_rs = [rs.x, rs.y, rs.z];
-
-
-        let angleMove = Math.atan2(v_wrist_elbow[2], v_wrist_elbow[1]) * 180 / Math.PI;
-        let angleDir = Math.atan2(v_wrist_elbow[0], v_wrist_elbow[2]) * 180 / Math.PI;
-        // let angleSim = cosinesim([0, 0., 1.], v_wrist_elbow);
-        // var angleDeg = Math.acos(angleSim) * 180 / Math.PI;
-
-
-
-
-        let cur_dir = REV;
-        if (angleMove < 90) {
+        let lw = result.worldLandmarks[0][POSE_LANDMARKS.LEFT_WRIST];
+        
+        if (rw.y < nose.y) {
+          // Right hand is up
           cur_dir = FWD;
-        }
 
-        if (angleDir > 40) {
-          if (cur_dir == FWD) {
-            appendCmd(cur_dir, RGT);
+          let v_rw = [rw.x, rw.y, rw.z];
+          let re = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_ELBOW];
+          let v_re = [re.x, re.y, re.z];
+          let v_wrist_elbow = subtactVector(v_rw, v_re);
+          v_wrist_elbow = mulVector(v_wrist_elbow, -1)
+          // let rs = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_SHOULDER];          
+
+          // let angleMove = Math.atan2(v_wrist_elbow[2], v_wrist_elbow[1]) * 180 / Math.PI;
+          let angleDir = Math.atan2(v_wrist_elbow[0], v_wrist_elbow[2]) * 180 / Math.PI;
+    
+          if (angleDir > 40) {
+              appendCmd(cur_dir, RGT);
+          } else if (angleDir < -40) {
+              appendCmd(cur_dir, LFT);
           } else {
-            appendCmd(cur_dir, LFT);
+            appendCmd(cur_dir, NONE);
           }
-        } else if (angleDir < -40) {
-          if (cur_dir == FWD) {
-            appendCmd(cur_dir, LFT);
+        } else if (lw.y < nose.y) {
+          // Left hand is up
+          cur_dir = REV;
+
+          let v_lw = [lw.x, lw.y, lw.z];
+          let le = result.worldLandmarks[0][POSE_LANDMARKS.LEFT_ELBOW];
+          let v_le = [le.x, le.y, le.z];
+          let v_wrist_elbow = subtactVector(v_lw, v_le);
+          v_wrist_elbow = mulVector(v_wrist_elbow, -1)
+          // let ls = result.worldLandmarks[0][POSE_LANDMARKS.LEFT_SHOULDER];          
+
+          // let angleMove = Math.atan2(v_wrist_elbow[2], v_wrist_elbow[1]) * 180 / Math.PI;
+          let angleDir = Math.atan2(v_wrist_elbow[0], v_wrist_elbow[2]) * 180 / Math.PI;
+    
+          if (angleDir > 40) {
+              appendCmd(cur_dir, LFT);
+          } else if (angleDir < -40) {
+              appendCmd(cur_dir, RGT);
           } else {
-            appendCmd(cur_dir, RGT);
+            appendCmd(cur_dir, NONE);
           }
+        } 
+
+        if (cur_dir === NONE) {
+          cur_cmd = "";
         } else {
-          appendCmd(cur_dir, NONE);
-        }
-        let cmd_dir = "";
-        let cmd_steer = "";
-        let sum_dir = dir.reduce((partialSum, a) => partialSum + a, 0)
-        if (sum_dir > 0) {
-          cmd_dir = "fwd";
-        } else if (sum_dir < 0) {
-          cmd_dir = "rev";
-        }
-        let sum_steer = steering.reduce((partialSum, a) => partialSum + a, 0)
-        if (sum_steer > 0) {
-          cmd_steer = "rgt";
-        } else if (sum_steer < 0) {
-          cmd_steer = "lft";
-        }
-
-        if (cmd_dir.length > 0) {
-          cur_cmd = cmd_dir;
-          if (cmd_steer.length > 0) {
-            cur_cmd += "|" + cmd_steer;
+          let cmd_dir = "";
+          let cmd_steer = "";
+          let sum_dir = dir.reduce((partialSum, a) => partialSum + a, 0)
+          if (sum_dir > 0) {
+            cmd_dir = "fwd";
+          } else if (sum_dir < 0) {
+            cmd_dir = "rev";
           }
+          let sum_steer = steering.reduce((partialSum, a) => partialSum + a, 0)
+          if (sum_steer > 0) {
+            cmd_steer = "rgt";
+          } else if (sum_steer < 0) {
+            cmd_steer = "lft";
+          }
+
+          if (cmd_dir.length > 0) {
+            cur_cmd = cmd_dir;
+            if (cmd_steer.length > 0) {
+              cur_cmd += "|" + cmd_steer;
+            }
+          }
+
+
+
+          // console.log(cur_cmd, "XYZ", v_rw);
+          console.log(cur_cmd)
+
+          // }
+          // console.log("Move:", angleMove, "DIR: ", angleDir);
+          // console.log("Y:", rw.y);
         }
-
-        console.log(cur_cmd);
-
-        // }
-        console.log("Move:", angleMove, "DIR: ", angleDir);
       }
     });
   }
