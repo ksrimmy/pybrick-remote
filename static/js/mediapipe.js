@@ -36,7 +36,7 @@ const POSE_LANDMARKS = {
   RIGHT_FOOT_INDEX: 32
 };
 
-const demosSection = document.getElementById("demos");
+const webcamSection = document.getElementById("webcamsection");
 let poseLandmarker = undefined;
 let runningMode = "IMAGE";
 let enableWebcamButton;
@@ -56,7 +56,7 @@ const createPoseLandmarker = async () => {
     runningMode: runningMode,
     numPoses: 2
   });
-  demosSection.classList.remove("invisible");
+  webcamSection.classList.remove("invisible");
 };
 createPoseLandmarker();
 
@@ -85,22 +85,31 @@ function enableCam(event) {
     return;
   }
   if (webcamRunning === true) {
-    webcamRunning = false;
-    enableWebcamButton.innerText = "ENABLE PREDICTIONS";
-  }
-  else {
+    if (video.srcObject !== null) {
+      const tracks = video.srcObject.getTracks();
+      if (tracks.length > 0) {
+        tracks[0].stop();  
+      }  
+      webcamRunning = false;
+
+      video.removeEventListener("loadeddata", predictWebcam)
+      enableWebcamButton.innerText = "Enable cam";
+      
+    }
+  } else {
     webcamRunning = true;
-    enableWebcamButton.innerText = "DISABLE PREDICTIONS";
+    enableWebcamButton.innerText = "Disable Cam";
+    // getUsermedia parameters.
+    const constraints = {
+      video: true
+    };
+    // Activate the webcam stream.
+    navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+      video.srcObject = stream;
+      video.addEventListener("loadeddata", predictWebcam);
+    });
+
   }
-  // getUsermedia parameters.
-  const constraints = {
-    video: true
-  };
-  // Activate the webcam stream.
-  navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
-    video.srcObject = stream;
-    video.addEventListener("loadeddata", predictWebcam);
-  });
 }
 let lastVideoTime = -1;
 let dir = [];
@@ -114,8 +123,8 @@ const RGT = 1;
 
 async function predictWebcam() {
   canvasElement.style.height = videoHeight;
-  video.style.height = videoHeight;
-  canvasElement.style.width = videoWidth;
+  // video.style.height = videoHeight;
+  // canvasElement.style.width = videoWidth;
   video.style.width = videoWidth;
   // Now let's start detecting the stream.
   if (runningMode === "IMAGE") {

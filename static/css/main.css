@@ -1,0 +1,80 @@
+body {
+    background-color:#c1ecf7;
+    touch-action: none;
+}
+
+.invisible {
+    display: none;
+}
+
+#menu {
+    width: 1000px;
+    margin:auto;
+    table-layout:fixed;
+    text-align: center;
+}
+
+#menu td {
+    font-size: 30px;
+    background-color: blue;
+    text-align: center;
+    color: white;
+    border-radius: 5%;
+    box-shadow: 5px 5px #888888;
+}
+
+#mainTable {
+    width:400px;
+    margin:auto;
+    table-layout:fixed;
+}
+
+#mainTable .ele1 {
+  background-color: #c1ecf7;
+  box-shadow: none;
+}
+
+#mainTable .ele2 {
+  font-size: 20px;
+  background-color: #f00c0c;
+  box-shadow: none;
+  box-shadow: 5px 5px #888888;
+}
+
+#mainTable .red-button {
+  background-color: #f00c0c;
+}
+
+#mainTable .blue-button {
+  background-color: #5c5cff;
+}
+
+#mainTable td {
+  font-size: 70px;
+  background-color: black;
+  text-align: center;
+  color: white;
+  border-radius: 25%;
+  box-shadow: 5px 5px #888888;
+}
+
+#mainTable td:active {
+  transform: translate(5px, 5px);
+  box-shadow: none;
+}
+
+#mainTable .noselect {
+  -webkit-touch-callout: none;
+  /* iOS Safari */
+  -webkit-user-select: none;
+  /* Safari */
+  -khtml-user-select: none;
+  /* Konqueror HTML */
+  -moz-user-select: none;
+  /* Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer/Edge */
+  user-select: none;
+  /* Non-prefixed version, currently
+    supported by Chrome and Opera */
+}

@@ -3,102 +3,54 @@
 
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <style>
-    .ele1 {
-      background-color: #c1ecf7;
-      box-shadow: none;
-    }
-
-    .ele2 {
-      font-size: 20px;
-      background-color: #f00c0c;
-      box-shadow: none;
-      box-shadow: 5px 5px #888888;
-    }
-
-    .red-button {
-      background-color: #f00c0c;
-    }
-
-    .blue-button {
-      background-color: #5c5cff;
-    }
-
-    td {
-      font-size: 70px;
-      background-color: black;
-      text-align: center;
-      color: white;
-      border-radius: 25%;
-      box-shadow: 5px 5px #888888;
-    }
-
-    td:active {
-      transform: translate(5px, 5px);
-      box-shadow: none;
-    }
-
-    .noselect {
-      -webkit-touch-callout: none;
-      /* iOS Safari */
-      -webkit-user-select: none;
-      /* Safari */
-      -khtml-user-select: none;
-      /* Konqueror HTML */
-      -moz-user-select: none;
-      /* Firefox */
-      -ms-user-select: none;
-      /* Internet Explorer/Edge */
-      user-select: none;
-      /* Non-prefixed version, currently
-                                      supported by Chrome and Opera */
-    }
-  </style>
+  <link href="static/css/main.css" rel="stylesheet" />
 </head>
 
-<body class="noselect" align="center" style="background-color:#c1ecf7;touch-action: none;">
+<body class="noselect">
   <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
   <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
-
-  <h1 style="color:black;text-align:center;">CAR CONTROLLER</h1>
-  <!-- <h2 id="sportele" style="color:#f00c0c; text-align:center;">SPORT OFF</h2><br> -->
-  <table id="mainTable" style="width:400px;margin:auto;table-layout:fixed" CELLSPACING=10>
+  <table id="menu" CELLSPACING=20>
     <tr>
-      <td ontouchstart='onTouchStart("fwd|lft",this)' onmousedown='onTouchStart("fwd|lft",this)'
-        ontouchend='onTouchEnd("",this)' onmouseup='onTouchEnd("",this)'>&#8598;</td>
-      <td ontouchstart='onTouchStart("fwd",this)' onmousedown='onTouchStart("fwd",this)'
-        ontouchend='onTouchEnd("",this)' onmouseup='onTouchEnd("",this)'>&#8593;</td>
-      <td ontouchstart='onTouchStart("fwd|rgt",this)' onmousedown='onTouchStart("fwd|rgt",this)'
-        ontouchend='onTouchEnd("",this)' onmouseup='onTouchEnd("",this)'>&#8599;</td>
-    </tr>
-    <tr>
-      <td class="ele1"></td>
-      <td class="ele2" ontouchstart='connect(this)' onclick="connect(this)">CONNECT</td>
-      <td class="ele1"></td>
-    </tr>
-    <tr>
-      <td ontouchstart='onTouchStart("rev|lft",this)' onmousedown='onTouchStart("rev|lft",this)'
-        ontouchend='onTouchEnd("",this)' onmouseup='onTouchEnd("",this)'>&#8601;</td>
-      <td ontouchstart='onTouchStart("rev",this)' onmousedown='onTouchStart("rev",this)'
-        ontouchend='onTouchEnd("",this)' onmouseup='onTouchEnd("",this)'>&#8595;</td>
-      <td ontouchstart='onTouchStart("rev|rgt",this)' onmousedown='onTouchStart("rev|rgt",this)'
-        ontouchend='onTouchEnd("",this)' onmouseup='onTouchEnd("",this)'>&#8600;</td>
+      <td onclick="connect(this)">Connect</td>
+      <td onclick="switch_control(this)">Buttons</td>
+      <td id="webcamButton">Enable cam</td>
+      <td onclick="switch_control(this)">Buttons</td>
+      <td onclick="switich_cam(this)">Switch Cam</td>
     </tr>
   </table>
-  <script src="script.js"></script>
-  <script type="module" src="mediapipe.js"></script>
 
-  <section id="demos" class="invisible">
-    <h2>Demo: Webcam continuous pose landmarks detection</h2>
-    <p>Stand in front of your webcam to get real-time pose landmarker detection.</br>Click <b>enable webcam</b> below
-      and
-      grant access to the webcam if prompted.</p>
+  <section id="controlersection" class="invisible">
+    <h1 style="color:black;text-align:center;">CAR CONTROLLER</h1>
+    <!-- <h2 id="sportele" style="color:#f00c0c; text-align:center;">SPORT OFF</h2><br> -->
+    <table id="mainTable"CELLSPACING=10>
+      <tr>
+        <td ontouchstart='onTouchStart("fwd|lft",this)' onmousedown='onTouchStart("fwd|lft",this)'
+          ontouchend='onTouchEnd("",this)' onmouseup='onTouchEnd("",this)'>&#8598;</td>
+        <td ontouchstart='onTouchStart("fwd",this)' onmousedown='onTouchStart("fwd",this)'
+          ontouchend='onTouchEnd("",this)' onmouseup='onTouchEnd("",this)'>&#8593;</td>
+        <td ontouchstart='onTouchStart("fwd|rgt",this)' onmousedown='onTouchStart("fwd|rgt",this)'
+          ontouchend='onTouchEnd("",this)' onmouseup='onTouchEnd("",this)'>&#8599;</td>
+      </tr>
+      <tr>
+        <td class="ele1"></td>
+        <td class="ele2" ontouchstart='connect(this)' onclick="connect(this)">CONNECT</td>
+        <td class="ele1"></td>
+      </tr>
+      <tr>
+        <td ontouchstart='onTouchStart("rev|lft",this)' onmousedown='onTouchStart("rev|lft",this)'
+          ontouchend='onTouchEnd("",this)' onmouseup='onTouchEnd("",this)'>&#8601;</td>
+        <td ontouchstart='onTouchStart("rev",this)' onmousedown='onTouchStart("rev",this)'
+          ontouchend='onTouchEnd("",this)' onmouseup='onTouchEnd("",this)'>&#8595;</td>
+        <td ontouchstart='onTouchStart("rev|rgt",this)' onmousedown='onTouchStart("rev|rgt",this)'
+          ontouchend='onTouchEnd("",this)' onmouseup='onTouchEnd("",this)'>&#8600;</td>
+      </tr>
+    </table>
+    </section>
+  <script src="static/js/script.js"></script>
+  <script type="module" src="static/js/mediapipe.js"></script>
 
+  <section id="webcamsection" class="invisible">
     <div id="liveView" class="videoView">
-      <button id="webcamButton" class="mdc-button mdc-button--raised">
-        <span class="mdc-button__ripple"></span>
-        <span class="mdc-button__label">ENABLE WEBCAM</span>
-      </button>
       <div style="position: absolute;left:  calc(50% - 240px);">
         <video id="webcam" style="width: 1280px; height: 720px; position: abso" autoplay playsinline></video>
         <canvas class="output_canvas" id="output_canvas" width="1280" height="720"
