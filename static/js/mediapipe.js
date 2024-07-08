@@ -219,9 +219,9 @@ async function predictWebcam() {
           let angleDir = Math.atan2(v_wrist_elbow[0], v_wrist_elbow[2]) * 180 / Math.PI;
     
           if (angleDir > 40) {
-              appendCmd(cur_dir, LFT);
-          } else if (angleDir < -40) {
               appendCmd(cur_dir, RGT);
+          } else if (angleDir < -40) {
+              appendCmd(cur_dir, LFT);
           } else {
             appendCmd(cur_dir, NONE);
           }
