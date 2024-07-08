@@ -41,8 +41,8 @@ let poseLandmarker = undefined;
 let runningMode = "IMAGE";
 let enableWebcamButton;
 let webcamRunning = false;
-const videoHeight = "360px";
-const videoWidth = "480px";
+const videoHeight = "810px";
+const videoWidth = "1080px";
 // Before we can use PoseLandmarker class we must wait for it to finish
 // loading. Machine Learning models can be large and take a moment to
 // get everything needed to run.
@@ -101,8 +101,11 @@ function enableCam(event) {
     enableWebcamButton.innerText = "Disable Cam";
     // getUsermedia parameters.
     const constraints = {
-      video: true
+        video: true,
+        width: 1080,
+        height: 810,
     };
+  
     // Activate the webcam stream.
     navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
       video.srcObject = stream;
@@ -123,8 +126,8 @@ const RGT = 1;
 
 async function predictWebcam() {
   canvasElement.style.height = videoHeight;
-  // video.style.height = videoHeight;
-  // canvasElement.style.width = videoWidth;
+  video.style.height = videoHeight;
+  canvasElement.style.width = videoWidth;
   video.style.width = videoWidth;
   // Now let's start detecting the stream.
   if (runningMode === "IMAGE") {
