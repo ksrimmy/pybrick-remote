@@ -61,6 +61,11 @@ const createPoseLandmarker = async () => {
 };
 createPoseLandmarker();
 
+
+switchCamButton = document.getElementById("switchCamButton");
+switchCamButton.addEventListener("click", switchCam);
+
+
 /********************************************************************
 // Demo 2: Continuously grab image from webcam stream and detect it.
 ********************************************************************/
@@ -113,7 +118,11 @@ function enableCam(enable) {
 
     // try {
       // Activate the webcam stream.
-      navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+      navigator.mediaDevices.getUserMedia(constraints).then((stream) => {{
+        facingMode: {
+          exact: cameraFacing
+        }
+      },
         video.srcObject = stream;
         video.addEventListener("loadeddata", predictWebcam);
       });
