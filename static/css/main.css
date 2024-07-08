@@ -8,14 +8,14 @@ body {
 }
 
 #menu {
-    width: 1000px;
+    width: 360px;
     margin:auto;
     table-layout:fixed;
     text-align: center;
 }
 
 #menu td {
-    font-size: 30px;
+    font-size: 10px;
     background-color: blue;
     text-align: center;
     color: white;
