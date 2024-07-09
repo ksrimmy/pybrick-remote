@@ -130,7 +130,7 @@ function stopWebcam() {
 
 function switchCam() {
   stopWebcam();
-  if (video_constraints === true) {
+  if (video_constraints === true || video_constraints.facingMode.exact === "user") {
     video_constraints = {
       facingMode: {
         exact: "environment"
