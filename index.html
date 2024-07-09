@@ -11,13 +11,28 @@
   <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
   <table id="menu" CELLSPACING=10>
     <tr>
-      <td onclick="connect(this)">Connect</td>
+      <td onclick="connect(this)">Connect Lego Hub</td>
       <!-- <td onclick="switch_control(this)">Buttons</td> -->
-      <td id="webcamButton">Enable cam</td>
+      <!-- <td id="webcamButton">Enable cam</td> -->
       <!-- <td onclick="switch_control(this)">Buttons</td> -->
-      <!-- <td id="switchCamButton">Switch Cam</td> -->
+      <td id="switchCamButton">&#128472; Cam</td>
     </tr>
   </table>
+
+  <script>
+    navigator.mediaDevices.enumerateDevices().then(function (devices) {
+           for(var i = 0; i < devices.length; i ++){
+               var device = devices[i];
+               if (device.kind === 'videoinput') {
+                   var option = document.createElement('option');
+                   option.value = device.deviceId;
+                   option.text = device.label || 'camera ' + (i + 1);
+                   document.querySelector('select#videoSource').appendChild(option);
+               }
+           };
+       });
+  </script>
+  <select id="videoSource"></select>
 
   <section id="controlersection" class="invisible">
     <h1 style="color:black;text-align:center;">CAR CONTROLLER</h1>
@@ -53,7 +68,7 @@
     <div id="liveView" class="videoView">
       <div style="position: absolute;left:5px;">
         <video id="webcam" style="width: 1280px; height: 720px; position: abso" autoplay playsinline></video>
-        <canvas class="output_canvas" id="output_canvas" width="1280" height="720"
+        <canvas class="output_canvas" id="output_canvas" width="360" height="480"
           style="position: absolute; left: 0px; top: 0px;"></canvas>
       </div>
     </div>

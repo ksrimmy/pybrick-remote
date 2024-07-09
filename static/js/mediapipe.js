@@ -55,7 +55,7 @@ const createPoseLandmarker = async () => {
       delegate: "GPU"
     },
     runningMode: runningMode,
-    numPoses: 2
+    numPoses: 1
   });
   webcamSection.classList.remove("invisible");
 };
@@ -63,8 +63,8 @@ createPoseLandmarker();
 
 
 
-// let switchCamButton = document.getElementById("switchCamButton");
-// switchCamButton.addEventListener("click", switchCam);
+let switchCamButton = document.getElementById("switchCamButton");
+switchCamButton.addEventListener("click", switchCam);
 
 /********************************************************************
 // Demo 2: Continuously grab image from webcam stream and detect it.
@@ -74,58 +74,62 @@ const canvasElement = document.getElementById("output_canvas");
 const canvasCtx = canvasElement.getContext("2d");
 const drawingUtils = new DrawingUtils(canvasCtx);
 // Check if webcam access is supported.
-const hasGetUserMedia = () => { var _a; return !!((_a = navigator.mediaDevices) === null || _a === void 0 ? void 0 : _a.getUserMedia); };
-// If webcam supported, add event listener to button for when user
-// wants to activate it.
-if (hasGetUserMedia()) {
-  enableWebcamButton = document.getElementById("webcamButton");
-  enableWebcamButton.addEventListener("click", enableCam);
-}
-else {
-  console.warn("getUserMedia() is not supported by your browser");
-}
+// const hasGetUserMedia = () => { var _a; return !!((_a = navigator.mediaDevices) === null || _a === void 0 ? void 0 : _a.getUserMedia); };
+// // If webcam supported, add event listener to button for when user
+// // wants to activate it.
+// if (hasGetUserMedia()) {
+//   enableWebcamButton = document.getElementById("webcamButton");
+//   enableWebcamButton.addEventListener("click", enableCam);
+// }
+// else {
+//   console.warn("getUserMedia() is not supported by your browser");
+// }
 // Enable the live webcam view and start detection.
-function enableCam(enable) {
+function startCam() {
   if (!poseLandmarker) {
     console.log("Wait! poseLandmaker not loaded yet.");
     return;
   }
-  if (webcamRunning !== enable) {
-    video.removeEventListener("loadeddata", predictWebcam);
-    if (webcamRunning === true) {
-      // stop webcam
-      if (video.srcObject !== null) {
-        const tracks = video.srcObject.getTracks();
-        if (tracks.length > 0) {
-          tracks[0].stop();  
-        }  
-        webcamRunning = false;
-        enableWebcamButton.innerText = "Enable cam";
-      }
-    } else {
-      // run webcam
-      webcamRunning = true;
-      enableWebcamButton.innerText = "Disable Cam";
-      
-    }
-    // getUsermedia parameters.
-    const constraints = {
-      video: video_constraints,
-      width: 360,
-      height: 480,
-    };
-    
 
-    // Activate the webcam stream.
+  // getUsermedia parameters.
+  const constraints = {
+    video: video_constraints,
+    width: 360,
+    height: 480,
+  };
+  
+  // Activate the webcam stream.
+  navigator.mediaDevices.getUserMedia(constraints)
+  .then((stream) => {
+    video.srcObject = stream;
+    video.addEventListener("loadeddata", predictWebcam);
+  })
+  .catch((e) => {
+    constraints.video = true;
     navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
       video.srcObject = stream;
       video.addEventListener("loadeddata", predictWebcam);
-    });  
-  }
+    });
+  });  
+  webcamRunning = true;
 }
 
+function stopWebcam() {
+  // if (webcamRunning !== enable) {
+  if (video.srcObject !== null) {
+    video.removeEventListener("loadeddata", predictWebcam);
+    if (video.srcObject !== null) {
+      const tracks = video.srcObject.getTracks();
+      if (tracks.length > 0) {
+        tracks[0].stop();  
+      }  
+    }
+  }
+  webcamRunning = false;
+}
 
 function switchCam() {
+  stopWebcam();
   if (video_constraints === true) {
     video_constraints = {
       facingMode: {
@@ -133,9 +137,13 @@ function switchCam() {
       }
     };
   } else {
-    video_constraints = true;
+    video_constraints = {
+      facingMode: {
+        exact: "user"
+      }
+    };
   }
-  enableCam(true);
+  startCam();
 }
 
 
@@ -148,6 +156,8 @@ const NONE = 0;
 const REV = -1;
 const LFT = -1;
 const RGT = 1;
+
+
 
 async function predictWebcam() {
   canvasElement.style.height = videoHeight;
@@ -179,16 +189,16 @@ async function predictWebcam() {
         // * x towards left hip
         // * y towards ground
         // * z towards back
-        // let nose = result.worldLandmarks[0][POSE_LANDMARKS.NOSE];
+        let nose = result.worldLandmarks[0][POSE_LANDMARKS.NOSE];
         let rw = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_WRIST];
-        let re = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_ELBOW];
         let lw = result.worldLandmarks[0][POSE_LANDMARKS.LEFT_WRIST];
         
-        if (rw.y < re.y) {
+        if (rw.y < nose.y) {
           // Right hand is up
           cur_dir = FWD;
-
+          
           let v_rw = [rw.x, rw.y, rw.z];
+          let re = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_ELBOW];
           let v_re = [re.x, re.y, re.z];
           let v_wrist_elbow = subtactVector(v_rw, v_re);
           v_wrist_elbow = mulVector(v_wrist_elbow, -1)
@@ -204,7 +214,7 @@ async function predictWebcam() {
           } else {
             appendCmd(cur_dir, NONE);
           }
-        } else if (lw.y < re.y) {
+        } else if (lw.y < nose.y) {
           // Left hand is up
           cur_dir = REV;
 
