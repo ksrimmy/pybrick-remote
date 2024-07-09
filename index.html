@@ -19,21 +19,6 @@
     </tr>
   </table>
 
-  <script>
-    navigator.mediaDevices.enumerateDevices().then(function (devices) {
-           for(var i = 0; i < devices.length; i ++){
-               var device = devices[i];
-               if (device.kind === 'videoinput') {
-                   var option = document.createElement('option');
-                   option.value = device.deviceId;
-                   option.text = device.label || 'camera ' + (i + 1);
-                   document.querySelector('select#videoSource').appendChild(option);
-               }
-           };
-       });
-  </script>
-  <select id="videoSource"></select>
-
   <section id="controlersection" class="invisible">
     <h1 style="color:black;text-align:center;">CAR CONTROLLER</h1>
     <!-- <h2 id="sportele" style="color:#f00c0c; text-align:center;">SPORT OFF</h2><br> -->
