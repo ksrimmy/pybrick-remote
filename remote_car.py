@@ -42,23 +42,33 @@ collision_counter = -1
 CAR_LENGTH = 130
 stopWatch = StopWatch()
 last_crash_time = 0
+new_crash = False
+
+AVERAGE_LEN = 10
+average_values = [0] * AVERAGE_LEN
 
 while True:
     # Let the remote program know we are ready for a command.
     full_speed_mode = False
-    cur_dist = distanceSensor.distance()
-    if cur_dist < 50:
+
+    average_values = average_values[1:]
+    average_values.append(distanceSensor.distance())
+    average_dist = sum(average_values) / AVERAGE_LEN
+
+    if average_dist < 50:
         full_speed_mode = True
     else:
-        if cur_dist < CAR_LENGTH:
+        if average_dist < CAR_LENGTH:
             if not new_crash:
                 new_crash = True
                 crash_time = stopWatch.time()
-                if crash_time - last_crash_time > 1000:
+                if crash_time > 1000:
                     collision_counter += 1
-                last_crash_time = crash_time
-        elif cur_dist >= CAR_LENGTH:
+                    stopWatch.pause()
+                    stopWatch.reset()
+        elif average_dist >= CAR_LENGTH:
             new_crash = False
+            stopWatch.resume()
             
             
  
