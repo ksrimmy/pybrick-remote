@@ -36,13 +36,14 @@ const POSE_LANDMARKS = {
   RIGHT_FOOT_INDEX: 32
 };
 
-const demosSection = document.getElementById("demos");
+const webcamSection = document.getElementById("webcamsection");
 let poseLandmarker = undefined;
 let runningMode = "IMAGE";
 let enableWebcamButton;
 let webcamRunning = false;
-const videoHeight = "360px";
-const videoWidth = "480px";
+let video_constraints = true;
+const videoHeight = "480px";
+const videoWidth = "360px";
 // Before we can use PoseLandmarker class we must wait for it to finish
 // loading. Machine Learning models can be large and take a moment to
 // get everything needed to run.
@@ -54,11 +55,16 @@ const createPoseLandmarker = async () => {
       delegate: "GPU"
     },
     runningMode: runningMode,
-    numPoses: 2
+    numPoses: 1
   });
-  demosSection.classList.remove("invisible");
+  webcamSection.classList.remove("invisible");
 };
 createPoseLandmarker();
+
+
+
+let switchCamButton = document.getElementById("switchCamButton");
+switchCamButton.addEventListener("click", switchCam);
 
 /********************************************************************
 // Demo 2: Continuously grab image from webcam stream and detect it.
@@ -68,40 +74,79 @@ const canvasElement = document.getElementById("output_canvas");
 const canvasCtx = canvasElement.getContext("2d");
 const drawingUtils = new DrawingUtils(canvasCtx);
 // Check if webcam access is supported.
-const hasGetUserMedia = () => { var _a; return !!((_a = navigator.mediaDevices) === null || _a === void 0 ? void 0 : _a.getUserMedia); };
-// If webcam supported, add event listener to button for when user
-// wants to activate it.
-if (hasGetUserMedia()) {
-  enableWebcamButton = document.getElementById("webcamButton");
-  enableWebcamButton.addEventListener("click", enableCam);
-}
-else {
-  console.warn("getUserMedia() is not supported by your browser");
-}
+// const hasGetUserMedia = () => { var _a; return !!((_a = navigator.mediaDevices) === null || _a === void 0 ? void 0 : _a.getUserMedia); };
+// // If webcam supported, add event listener to button for when user
+// // wants to activate it.
+// if (hasGetUserMedia()) {
+//   enableWebcamButton = document.getElementById("webcamButton");
+//   enableWebcamButton.addEventListener("click", enableCam);
+// }
+// else {
+//   console.warn("getUserMedia() is not supported by your browser");
+// }
 // Enable the live webcam view and start detection.
-function enableCam(event) {
+function startCam() {
   if (!poseLandmarker) {
     console.log("Wait! poseLandmaker not loaded yet.");
     return;
   }
-  if (webcamRunning === true) {
-    webcamRunning = false;
-    enableWebcamButton.innerText = "ENABLE PREDICTIONS";
-  }
-  else {
-    webcamRunning = true;
-    enableWebcamButton.innerText = "DISABLE PREDICTIONS";
-  }
+
   // getUsermedia parameters.
   const constraints = {
-    video: true
+    video: video_constraints,
+    width: 360,
+    height: 480,
   };
+  
   // Activate the webcam stream.
-  navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+  navigator.mediaDevices.getUserMedia(constraints)
+  .then((stream) => {
     video.srcObject = stream;
     video.addEventListener("loadeddata", predictWebcam);
-  });
+  })
+  .catch((e) => {
+    constraints.video = true;
+    navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+      video.srcObject = stream;
+      video.addEventListener("loadeddata", predictWebcam);
+    });
+  });  
+  webcamRunning = true;
 }
+
+function stopWebcam() {
+  // if (webcamRunning !== enable) {
+  if (video.srcObject !== null) {
+    video.removeEventListener("loadeddata", predictWebcam);
+    if (video.srcObject !== null) {
+      const tracks = video.srcObject.getTracks();
+      if (tracks.length > 0) {
+        tracks[0].stop();  
+      }  
+    }
+  }
+  webcamRunning = false;
+}
+
+function switchCam() {
+  stopWebcam();
+  if (video_constraints === true || video_constraints.facingMode.exact === "user") {
+    video_constraints = {
+      facingMode: {
+        exact: "environment"
+      }
+    };
+  } else {
+    video_constraints = {
+      facingMode: {
+        exact: "user"
+      }
+    };
+  }
+  startCam();
+}
+
+
 let lastVideoTime = -1;
 let dir = [];
 let steering = [];
@@ -111,6 +156,8 @@ const NONE = 0;
 const REV = -1;
 const LFT = -1;
 const RGT = 1;
+
+
 
 async function predictWebcam() {
   canvasElement.style.height = videoHeight;
@@ -136,71 +183,94 @@ async function predictWebcam() {
       }
       canvasCtx.restore();
 
+      let cur_dir = NONE;
       if (result.worldLandmarks.length > 0) {
+        // mediapipe coordinate system:
+        // * x towards left hip
+        // * y towards ground
+        // * z towards back
+        let nose = result.worldLandmarks[0][POSE_LANDMARKS.NOSE];
         let rw = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_WRIST];
-        let v_rw = [rw.x, rw.y, rw.z];
-        let re = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_ELBOW];
-        let v_re = [re.x, re.y, re.z];
-        let v_wrist_elbow = subtactVector(v_rw, v_re);
-        v_wrist_elbow = mulVector(v_wrist_elbow, -1)
-        let rs = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_SHOULDER];
-        let v_rs = [rs.x, rs.y, rs.z];
-
-
-        let angleMove = Math.atan2(v_wrist_elbow[2], v_wrist_elbow[1]) * 180 / Math.PI;
-        let angleDir = Math.atan2(v_wrist_elbow[0], v_wrist_elbow[2]) * 180 / Math.PI;
-        // let angleSim = cosinesim([0, 0., 1.], v_wrist_elbow);
-        // var angleDeg = Math.acos(angleSim) * 180 / Math.PI;
-
-
-
-
-        let cur_dir = REV;
-        if (angleMove < 90) {
+        let lw = result.worldLandmarks[0][POSE_LANDMARKS.LEFT_WRIST];
+        
+        if (rw.y < nose.y) {
+          // Right hand is up
           cur_dir = FWD;
-        }
+          
+          let v_rw = [rw.x, rw.y, rw.z];
+          let re = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_ELBOW];
+          let v_re = [re.x, re.y, re.z];
+          let v_wrist_elbow = subtactVector(v_rw, v_re);
+          v_wrist_elbow = mulVector(v_wrist_elbow, -1)
+          // let rs = result.worldLandmarks[0][POSE_LANDMARKS.RIGHT_SHOULDER];          
 
-        if (angleDir > 40) {
-          if (cur_dir == FWD) {
-            appendCmd(cur_dir, RGT);
+          // let angleMove = Math.atan2(v_wrist_elbow[2], v_wrist_elbow[1]) * 180 / Math.PI;
+          let angleDir = Math.atan2(v_wrist_elbow[0], v_wrist_elbow[2]) * 180 / Math.PI;
+    
+          if (angleDir > 40) {
+              appendCmd(cur_dir, RGT);
+          } else if (angleDir < -40) {
+              appendCmd(cur_dir, LFT);
           } else {
-            appendCmd(cur_dir, LFT);
+            appendCmd(cur_dir, NONE);
           }
-        } else if (angleDir < -40) {
-          if (cur_dir == FWD) {
-            appendCmd(cur_dir, LFT);
+        } else if (lw.y < nose.y) {
+          // Left hand is up
+          cur_dir = REV;
+
+          let v_lw = [lw.x, lw.y, lw.z];
+          let le = result.worldLandmarks[0][POSE_LANDMARKS.LEFT_ELBOW];
+          let v_le = [le.x, le.y, le.z];
+          let v_wrist_elbow = subtactVector(v_lw, v_le);
+          v_wrist_elbow = mulVector(v_wrist_elbow, -1)
+          // let ls = result.worldLandmarks[0][POSE_LANDMARKS.LEFT_SHOULDER];          
+
+          // let angleMove = Math.atan2(v_wrist_elbow[2], v_wrist_elbow[1]) * 180 / Math.PI;
+          let angleDir = Math.atan2(v_wrist_elbow[0], v_wrist_elbow[2]) * 180 / Math.PI;
+    
+          if (angleDir > 40) {
+              appendCmd(cur_dir, RGT);
+          } else if (angleDir < -40) {
+              appendCmd(cur_dir, LFT);
           } else {
-            appendCmd(cur_dir, RGT);
+            appendCmd(cur_dir, NONE);
           }
+        } 
+
+        if (cur_dir === NONE) {
+          cur_cmd = "";
         } else {
-          appendCmd(cur_dir, NONE);
-        }
-        let cmd_dir = "";
-        let cmd_steer = "";
-        let sum_dir = dir.reduce((partialSum, a) => partialSum + a, 0)
-        if (sum_dir > 0) {
-          cmd_dir = "fwd";
-        } else if (sum_dir < 0) {
-          cmd_dir = "rev";
-        }
-        let sum_steer = steering.reduce((partialSum, a) => partialSum + a, 0)
-        if (sum_steer > 0) {
-          cmd_steer = "rgt";
-        } else if (sum_steer < 0) {
-          cmd_steer = "lft";
-        }
-
-        if (cmd_dir.length > 0) {
-          cur_cmd = cmd_dir;
-          if (cmd_steer.length > 0) {
-            cur_cmd += "|" + cmd_steer;
+          let cmd_dir = "";
+          let cmd_steer = "";
+          let sum_dir = dir.reduce((partialSum, a) => partialSum + a, 0)
+          if (sum_dir > 0) {
+            cmd_dir = "fwd";
+          } else if (sum_dir < 0) {
+            cmd_dir = "rev";
           }
+          let sum_steer = steering.reduce((partialSum, a) => partialSum + a, 0)
+          if (sum_steer > 0) {
+            cmd_steer = "rgt";
+          } else if (sum_steer < 0) {
+            cmd_steer = "lft";
+          }
+
+          if (cmd_dir.length > 0) {
+            cur_cmd = cmd_dir;
+            if (cmd_steer.length > 0) {
+              cur_cmd += "|" + cmd_steer;
+            }
+          }
+
+
+
+          // console.log(cur_cmd, "XYZ", v_rw);
+          console.log(cur_cmd)
+
+          // }
+          // console.log("Move:", angleMove, "DIR: ", angleDir);
+          // console.log("Y:", rw.y);
         }
-
-        console.log(cur_cmd);
-
-        // }
-        console.log("Move:", angleMove, "DIR: ", angleDir);
       }
     });
   }
@@ -259,30 +329,3 @@ function subtactVector(a, b) {
   return a.map((e, i) => e - b[i]);
 }
 
-async function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function handleVideo(cameraFacing) {
-  const constraints = {
-    video: {
-      facingMode: {
-        exact: cameraFacing
-      }
-    }
-  }
-  return constraints
-};
-
-function turnVideo(constraints) {
-  let video;
-  navigator.mediaDevices.getUserMedia(constraints)
-    .then((stream) => {
-      video = document.createElement("video")
-      video.srcObject = stream
-      video.play()
-      video.onloadeddata = () => {
-        ctx.height = video.videoHeight
-      }
-    })
-}
