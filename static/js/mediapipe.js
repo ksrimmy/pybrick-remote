@@ -154,6 +154,7 @@ const BUFFER_SIZE = 3;
 const FWD = 1;
 const NONE = 0;
 const REV = -1;
+// digital steering
 const LFT = -1;
 const RGT = 1;
 
@@ -206,14 +207,17 @@ async function predictWebcam() {
 
           // let angleMove = Math.atan2(v_wrist_elbow[2], v_wrist_elbow[1]) * 180 / Math.PI;
           let angleDir = Math.atan2(v_wrist_elbow[0], v_wrist_elbow[2]) * 180 / Math.PI;
-    
-          if (angleDir > 40) {
-              appendCmd(cur_dir, RGT);
-          } else if (angleDir < -40) {
-              appendCmd(cur_dir, LFT);
-          } else {
-            appendCmd(cur_dir, NONE);
-          }
+          
+          // digital steering
+          // if (angleDir > 40) {
+          //     appendCmd(cur_dir, RGT);
+          // } else if (angleDir < -40) {
+          //     appendCmd(cur_dir, LFT);
+          // } else {
+          //   appendCmd(cur_dir, NONE);
+          // }
+
+          appendCmd(cur_dir, angleDir);
         } else if (lw.y < nose.y) {
           // Left hand is up
           cur_dir = REV;
@@ -228,13 +232,16 @@ async function predictWebcam() {
           // let angleMove = Math.atan2(v_wrist_elbow[2], v_wrist_elbow[1]) * 180 / Math.PI;
           let angleDir = Math.atan2(v_wrist_elbow[0], v_wrist_elbow[2]) * 180 / Math.PI;
     
-          if (angleDir > 40) {
-              appendCmd(cur_dir, RGT);
-          } else if (angleDir < -40) {
-              appendCmd(cur_dir, LFT);
-          } else {
-            appendCmd(cur_dir, NONE);
-          }
+          // digital steering
+          // if (angleDir > 40) {
+          //     appendCmd(cur_dir, RGT);
+          // } else if (angleDir < -40) {
+          //     appendCmd(cur_dir, LFT);
+          // } else {
+          //   appendCmd(cur_dir, NONE);
+          // }
+
+          appendCmd(cur_dir, angleDir);
         } 
 
         if (cur_dir === NONE) {
@@ -248,24 +255,37 @@ async function predictWebcam() {
           } else if (sum_dir < 0) {
             cmd_dir = "rev";
           }
-          let sum_steer = steering.reduce((partialSum, a) => partialSum + a, 0)
-          if (sum_steer > 0) {
-            cmd_steer = "rgt";
-          } else if (sum_steer < 0) {
-            cmd_steer = "lft";
-          }
+
+          // digital steering
+          // let sum_steer = steering.reduce((partialSum, a) => partialSum + a, 0)
+          // if (sum_steer > 0) {
+          //   cmd_steer = "rgt";
+          // } else if (sum_steer < 0) {
+          //   cmd_steer = "lft";
+          // }
+          
+          // if (cmd_dir.length > 0) {
+          //   cur_cmd = cmd_dir;
+          //   if (cmd_steer.length > 0) {
+          //     cur_cmd += "|" + cmd_steer;
+          //   }
+          // }
+
+          // analog steering
+          cmd_steer = steering.reduce((partialSum, a) => partialSum + a, 0)
+          cmd_steer = Math.min(90, cmd_steer)
+          cmd_steer = Math.max(-90, cmd_steer).toFixed(1)
 
           if (cmd_dir.length > 0) {
             cur_cmd = cmd_dir;
-            if (cmd_steer.length > 0) {
-              cur_cmd += "|" + cmd_steer;
-            }
+          }
+          if (cmd_steer.length > 0) {
+            cur_cmd += "|" + cmd_steer;
           }
 
 
 
           // console.log(cur_cmd, "XYZ", v_rw);
-          console.log(cur_cmd)
 
           // }
           // console.log("Move:", angleMove, "DIR: ", angleDir);
