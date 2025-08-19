@@ -73,6 +73,7 @@ prev_cmd_arr = []
 collision_counter = -1
 CAR_LENGTH = 130
 stopWatch = StopWatch()
+# lastCommandWatch = StopWatch()
 last_crash_time = 0
 new_crash = False
 
@@ -85,6 +86,8 @@ NORMAL_SPEED_REV = -200
 
 AVERAGE_LEN = 10
 average_values = [0] * AVERAGE_LEN
+
+LASTCOMMANDTHRESHOLD = 1000
 
 while True:
     # Let the remote program know we are ready for a command.
@@ -132,7 +135,7 @@ while True:
     # # stdout.buffer.write(data)
     # wait(2)
         
-    if keyboard.poll(0):
+    if keyboard.poll(LASTCOMMANDTHRESHOLD):
         #cmd = input()
         data += stdin.read(1)
          
@@ -166,6 +169,8 @@ while True:
                 else:
                     speed = NORMAL_SPEED_FWD if "fwd" in cmd_arr else (NORMAL_SPEED_REV if "rev" in cmd_arr else 0)
                 car.drive(speed, angle)
+    else:
+        car.drive(0, 0.0)
     # wait(2)
 
     
