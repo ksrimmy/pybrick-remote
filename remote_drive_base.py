@@ -1,5 +1,5 @@
 from pybricks.parameters import Direction, Port, Color
-from pybricks.pupdevices import Motor, UltrasonicSensor
+from pybricks.pupdevices import Motor, UltrasonicSensor, ColorSensor, ForceSensor
 # from pybricks.robotics import Car
 from pybricks.tools import wait, StopWatch
 from pybricks.hubs import PrimeHub
@@ -19,29 +19,51 @@ def detectDistanceSensor(sensorPort = Port.A):
         distanceSensor.lights.on()
 
         # If all goes well, you'll see this message.
-        stdout.buffer.write(b"Detected DistanceSensor.")
+        # stdout.buffer.write(b"Detected DistanceSensor.")
         return distanceSensor
     except OSError as ex:
         # If an OSError was raised, we can check what
         # kind of error this was, like ENODEV.
         if ex.errno == ENODEV:
+            pass # no writes, as this leads to not detecting ready state of brick
             # ENODEV is short for "Error, no device."
-            stdout.buffer.write(b"There is no sensor on this port.")
+            # stdout.buffer.write(b"There is no sensor on this port.")
         else:
-            stdout.buffer.write(b"Error occurred when detecting DistanceSensor.")
+            pass
+            # stdout.buffer.write(b"Error occurred when detecting DistanceSensor.")
+        return None
+
+def detectMotor(motorPort, direction):
+    try:
+        # Try to initialize
+        motor = Motor(motorPort, direction)
+        return motor
+    except OSError as ex:
+        return None
+
+def detectForceSensor(sensorPort = Port.F):
+    try:
+        # Try to initialize
+        forceSensor = ForceSensor(sensorPort)
+        return forceSensor
+    except OSError as ex:
+        return None
+
+def detectColorSensor(sensorPort = Port.E):
+    try:
+        # Try to initialize
+        colorSensor = ColorSensor(sensorPort)
+        return colorSensor
+    except OSError as ex:
         return None
 
 # Set up all devices.
 distanceSensor = detectDistanceSensor(Port.A)
-# distanceSensor = UltrasonicSensor(Port.A)
-# distanceSensor.lights.on()
-# steering = Motor(Port.B, Direction.COUNTERCLOCKWISE)
-motorL = Motor(Port.C, Direction.COUNTERCLOCKWISE)
-motorR = Motor(Port.D, Direction.CLOCKWISE)
-
-
-
-
+motorC = detectMotor(Port.B, Direction.COUNTERCLOCKWISE)
+motorL = detectMotor(Port.C, Direction.COUNTERCLOCKWISE)    # L/R motor needed for rest of program
+motorR = detectMotor(Port.D, Direction.CLOCKWISE)
+colorSensor = detectColorSensor(Port.E)
+forceSensor = detectForceSensor(Port.F)
 
 
 
@@ -75,6 +97,7 @@ CAR_LENGTH = 130
 stopWatch = StopWatch()
 # lastCommandWatch = StopWatch()
 last_crash_time = 0
+last_force_state = False
 new_crash = False
 
 FULL_SPEED_FWD = 500
@@ -113,11 +136,25 @@ while True:
                 new_crash = False
                 stopWatch.resume()
                 
-                
-    
-            if collision_counter >= 0:
-                hub.display.pixel(collision_counter/4, collision_counter%4, brightness=100)
 
+    if forceSensor:
+        if forceSensor.touched() and not last_force_state:
+            last_force_state = True
+            collision_counter += 1
+        elif not forceSensor.touched():
+            last_force_state = False
+
+    if collision_counter >= 0:
+        # hub.display.number(collision_counter)
+        # if collision_counter > 99:
+        #     collision_counter = 0
+        hub.display.pixel(collision_counter/5, collision_counter%5, brightness=100)
+
+        if collision_counter >= 25:
+            collision_counter = -1
+            for r in range(0, 5):
+                for c in range (0, 5):
+                    hub.display.pixel(r, c, brightness=0)
         
 
     
@@ -169,6 +206,9 @@ while True:
                 else:
                     speed = NORMAL_SPEED_FWD if "fwd" in cmd_arr else (NORMAL_SPEED_REV if "rev" in cmd_arr else 0)
                 car.drive(speed, angle)
+
+                if motorC:
+                    motorC.track_target(-angle)
     else:
         car.drive(0, 0.0)
     # wait(2)
